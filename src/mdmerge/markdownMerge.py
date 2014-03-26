@@ -47,6 +47,7 @@ class MarkdownMerge:
         self.__reoMultiMarkdownIndexMarker = re.compile("^#\s*merge$")
         self.__reoPathAndWildcardExtension = re.compile("^(.+)\.\*$")
         self.__reoWildcardExtension = re.compile("^(.+)\.\*$")
+        self.__reoPandocTitle = re.compile("^%")
 
         self.buf = deque()
 
@@ -668,14 +669,24 @@ class MarkdownMerge:
 
         """
 
-        for line in self._mergedLines(
-                mainDocumentPath, infileNode, infile, False, False):
+        for no, line in enumerate(self._mergedLines(
+                mainDocumentPath, infileNode, infile, False, False)):
             if None == line:
                 continue
-            outline = self._bumpLevel(level, line.rstrip("\r\n"))
-            outline = outline + '\n';
+            elif self.__reoPandocTitle.match(line) and no == 0:
+                # this is the pandoc header
+                outline = '#' * (level) + line[1:].rstrip("\r\n")
+                outline = outline + '\n'
+            elif self.__reoPandocTitle.match(line) and no in (1, 2):
+                # this is a date/author
+                continue
+            else:
+                outline = self._bumpLevel(level, line.rstrip("\r\n"))
+                outline = outline + '\n'
+
             if None == outfile.encoding:
                 outline = outline.encode('utf-8')
+
             outfile.write(outline)
 
     def _mergeStdinFile(self,

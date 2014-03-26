@@ -1115,4 +1115,39 @@ class MarkdownMergeTests(unittest.TestCase):
 
         self._mergeTest("u2.mmd", "expected-u2.mmd")
 
+    def testPandocMerge(self):
+        """Test MarkdownMerge.merge().
+
+        A Leanpub index file called 'book.txt' but without the flag
+        indicating that it is special.
+
+        """
+
+        # create the temp directory
+        inputdirPath = os.path.join(self.tempDirPath, "Inputs")
+        os.makedirs(inputdirPath)
+
+        # copy the index file to a temp directory
+        absTestfilePath = os.path.join(self.__dataDir, "pandoc_book.txt")
+        tgtPath = os.path.join(inputdirPath, "book.txt")
+        shutil.copy(absTestfilePath, tgtPath)
+        absTestfilePath = os.path.join(self.__dataDir, "pandoc_book2.txt")
+        tgtPath = os.path.join(inputdirPath, "levels.txt")
+        shutil.copy(absTestfilePath, tgtPath)
+
+
+        # copy the input files to a temp directory
+        testfilePaths = ([
+            "pandoc1.md", "pandoc2.md"])
+        for testfilePath in testfilePaths:
+            absTestfilePath = os.path.join(self.__dataDir, testfilePath)
+            shutil.copy(absTestfilePath, inputdirPath)
+
+        # run the test
+        absInfilePath = os.path.join(inputdirPath, "book.txt")
+        self._mergeTest(absInfilePath, "expected-pandoc.md", infileAsStdin=True, stdinIsBook=True)
+
+        absInfilePath = os.path.join(inputdirPath, "levels.txt")
+        self._mergeTest(absInfilePath, "expected-pandoc-levels.md", infileAsStdin=True, stdinIsBook=True)
+
 # eof
